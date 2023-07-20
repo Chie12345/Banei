@@ -10,7 +10,6 @@ st.header("複勝とは・・・選んだ馬が3着以内に入れば勝ち！")
 uploaded_file = st.file_uploader("CSVファイルをアップロード", type=["csv"])
 
 df = pd.read_csv(uploaded_file)
-st.dataframe(df)
 
 # 着 順が数字以外のものを消す
 df = df.dropna(subset=["着 順"])
@@ -55,7 +54,8 @@ t = df["victory"].values
 x = df.drop(["victory"], axis=1).values
 
 # ロジスティック回帰
-clf = LogisticRegression()
+clf = LogisticRegression(C=1.0)
+# モデルの学習
 clf.fit(x, t)
 
 # 入力画面
@@ -72,19 +72,19 @@ with st.form("my_form", clear_on_submit=False):
     
 st.write("結果発表‼‼")
 # インプットデータ
-value_df = pd.DataFrame({"出走馬情報":"　　", "馬名":name, "斤量":weight, "天候":wether}, index=[0])
-value_df.set_index("出走馬情報", inplace=True)
-st.write(value_df)
+df_run = pd.DataFrame({"出走馬情報":"　　", "馬名":name, "斤量":weight, "天候":wether}, index=[0])
+df_run.set_index("出走馬情報", inplace=True)
+st.write(df_run)
 
 # 予測値のデータフレーム
 # カテゴリカル変数のエンコード
-le.fit(value_df["馬名"])
-value_df["馬名"] = le.transform(value_df["馬名"])
+le.fit(df_run["馬名"])
+df_run["馬名"] = le.transform(df_run["馬名"])
 
-le.fit(value_df["天候"])
-value_df["天候"] = le.transform(value_df["天候"])
+le.fit(df_run["天候"])
+df_run["天候"] = le.transform(df_run["天候"])
 
-pred_probs = clf.predict_proba(value_df)
+pred_probs = clf.predict_proba(df_run)
 pred_df = pd.DataFrame(pred_probs, columns=["複勝頑張っちゃうかも！", "残念また今度頑張ろう"], index=["　　"])
 
 st.write("勝利の行方は・・・")
