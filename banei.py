@@ -87,7 +87,7 @@ pred_df = pd.DataFrame(pred_probs, columns=["複勝頑張っちゃうかも！",
 
 st.write("勝利の行方は・・・")
 
-# 予測結果の出力!!
+# 予測結果の出力
 name = pred_df.idxmax(axis=1).tolist()
 st.write("あなたの選んだ出走馬は", str(name[0]))
 
