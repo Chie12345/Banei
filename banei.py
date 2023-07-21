@@ -31,16 +31,14 @@ df["斤量"] = df["斤量"].astype(int)
 # 1-3着は0、それ以外は1
 df["victory"] = [0 if i <=3 else 1 for i in df["着 順"].tolist()]
 
-# 馬名に数値を割り当てる
-from sklearn.preprocessing import LabelEncoder
-le = LabelEncoder()
-le.fit(df["馬名"])
-le.transform(df["馬名"])
-df["馬名"] = le.transform(df["馬名"])
+# 天候を数値データにする
+wether_mapping = {"晴": 1, "曇": 2, "小": 3, "雨": 4, "雪":5}
+df['天候'] = df['天候'].map(wether_mapping)
 
-# 天候に数値を割り当てる
-le.fit(df["天候"])
-df["天候"] = le.transform(df["天候"])
+# 馬名から辞書を作る
+name_mapping = dict(zip(df["馬名"].unique().tolist(), range(1, len(df["馬名"].unique().tolist()) + 1)))
+# 文字列から数値に変換する
+df["馬名"] = df["馬名"].map(name_mapping)
 
 # victory、馬名、斤量、天候以外は削除
 df = df.drop(["着 順", "枠", "馬 番", "性齢", "騎手", "タイム", "人 気", "単勝 オッズ", "厩舎", "馬体重 (増減)", "レースID", "Unnamed: 0", "着差", "後3F", "0", "1", "2", "3"], axis=1)
@@ -65,6 +63,9 @@ with st.form("my_form", clear_on_submit=False):
     weight = st.number_input("斤量", 0)
     wether = st.selectbox("天候", ["晴", "曇", "小", "雨", "雪"])
 
+    if not name:
+        st.warning("出走馬の名前をおしえてください")
+
     submitted = st.form_submit_button("結果を予想！")
     if submitted:
         with st.spinner("計算中です・・・"):
@@ -78,11 +79,8 @@ st.write(df_run)
 
 # 予測値のデータフレーム
 # カテゴリカル変数のエンコード
-le.fit(df_run["馬名"])
-df_run["馬名"] = le.transform(df_run["馬名"])
-
-le.fit(df_run["天候"])
-df_run["天候"] = le.transform(df_run["天候"])
+df_run["馬名"] = df_run["馬名"].map(name_mapping)
+df_run['天候'] = df_run['天候'].map(wether_mapping)
 
 pred_probs = clf.predict_proba(df_run)
 pred_df = pd.DataFrame(pred_probs, columns=["複勝頑張っちゃうかも！", "残念また今度頑張ろう"], index=["　　"])
